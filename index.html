@@ -1,67 +1,68 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Pick3 Bucket</title>
-    <script>
-        // Check for saved tickets in local storage
-        function getSavedTickets() {
-            return JSON.parse(localStorage.getItem('tickets')) || [];
-        }
+    <link rel="stylesheet" href="styles.css">
+</head>
 
-        // Save ticket to local storage
+<body>
+    <div id="app"></div>
+
+    <script>
+        // Local Storage Functions
         function saveTicket(ticket) {
-            const tickets = getSavedTickets();
+            let tickets = JSON.parse(localStorage.getItem('tickets')) || [];
             tickets.push(ticket);
             localStorage.setItem('tickets', JSON.stringify(tickets));
         }
 
-        // Load tickets into dashboard
         function loadTickets() {
-            const tickets = getSavedTickets();
-            const ticketList = document.getElementById('ticket-list');
-            ticketList.innerHTML = '';
-            tickets.forEach(ticket => {
-                const li = document.createElement('li');
-                li.textContent = ticket;
-                ticketList.appendChild(li);
+            return JSON.parse(localStorage.getItem('tickets')) || [];
+        }
+
+        function deleteTicket(index) {
+            let tickets = loadTickets();
+            tickets.splice(index, 1);
+            localStorage.setItem('tickets', JSON.stringify(tickets));
+        }
+
+        // Fetch Latest Winning Numbers from Louisiana Lottery API
+        async function fetchWinningNumbers() {
+            try {
+                const response = await fetch('https://api.louisianalottery.com/lottery/v1/numbers'); // Example URL - adjust to correct API
+                const data = await response.json();
+                // Process winning numbers data as necessary
+                console.log(data);
+            } catch (error) {
+                console.error('Error fetching winning numbers:', error);
+            }
+        }
+
+        // UI Components Creation
+        function createSavedTicketsDashboard() {
+            const tickets = loadTickets();
+            const dashboard = document.createElement('div');
+            dashboard.classList.add('dashboard');
+            tickets.forEach((ticket, index) => {
+                const ticketElement = document.createElement('div');
+                ticketElement.textContent = ticket;
+                const deleteButton = document.createElement('button');
+                deleteButton.textContent = 'Delete';
+                deleteButton.onclick = () => deleteTicket(index);
+                ticketElement.appendChild(deleteButton);
+                dashboard.appendChild(ticketElement);
             });
-        }
-
-        // Call Louisiana lottery API to get the latest winning numbers
-        async function fetchLatestWinningNumbers() {
-            const response = await fetch('https://louisianalottery.com/api/winning-numbers');
-            const data = await response.json();
-            displayWinningNumbers(data); // Assuming data has winning numbers
-        }
-
-        // Display the winning numbers
-        function displayWinningNumbers(data) {
-            const winningNumbers = document.getElementById('winning-numbers');
-            winningNumbers.textContent = 'Latest Winning Numbers: ' + data.winningNumbers.join(', ');
+            document.body.appendChild(dashboard);
         }
 
         document.addEventListener('DOMContentLoaded', () => {
-            loadTickets();
-            fetchLatestWinningNumbers();
+            fetchWinningNumbers();  // Fetch winning numbers on load
+            createSavedTicketsDashboard(); // Create dashboard on load
         });
     </script>
-</head>
-<body>
-    <h1>Pick3 Bucket</h1>
-    <div>
-        <h2>Your Tickets</h2>
-        <ul id="ticket-list"></ul>
-    </div>
-    <div>
-        <h2>Save a Ticket</h2>
-        <input type="text" id="ticket-input" placeholder="Enter your ticket" />
-        <button onclick="saveTicket(document.getElementById('ticket-input').value); loadTickets();">Save Ticket</button>
-    </div>
-    <div>
-        <h2>Latest Winning Numbers</h2>
-        <p id="winning-numbers">Loading...</p>
-    </div>
 </body>
+
 </html>
